@@ -1,2 +1,2 @@
 # Test-repo
-Just test ow it works
+Just test how it works
