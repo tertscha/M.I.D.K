@@ -1,0 +1,41 @@
+#include "MatrixMiniR4.h"
+
+void setup()
+{
+  MiniR4.begin();
+  MiniR4.PWR.setBattCell(2);
+
+  MiniR4.OLED.clearDisplay();
+  MiniR4.OLED.setCursor(0, 0);
+  MiniR4.OLED.print("Motor test");
+  MiniR4.OLED.display();
+
+  MiniR4.M3.setBrake(true);
+  MiniR4.M4.setBrake(true);
+  delay(1000);
+
+    // M3 teszt
+
+}
+
+void loop()
+{
+   static bool lastUp = false;
+  bool up = MiniR4.BTN_UP.getState();     // beépített UP gomb
+  // él-érzékelés (debounce-hoz elég sokszor): csak akkor, amikor most lett lenyomva
+  if (up && !lastUp) {
+    MiniR4.OLED.clearDisplay();
+    MiniR4.OLED.setCursor(0,0);
+    MiniR4.OLED.print("GO!");
+    MiniR4.OLED.display();
+
+    MiniR4.M3.setPower(50);
+    MiniR4.M4.setPower(50);
+    delay(1000);
+    MiniR4.M3.setBrake(true);
+    MiniR4.M4.setBrake(true);
+    delay(1000);
+   }
+  lastUp = up; 
+
+}
