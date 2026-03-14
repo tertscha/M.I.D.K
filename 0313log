@@ -1,0 +1,10 @@
+Mit csináltunk:
+1. kikérdeztük ChatGPT hogy melyik motor mire való.
+2. kiválasztottuk a 2 DC motort a robot alapjához
+3. megépítettük ROZI-t.
+4. készítettünk hello world-öt
+5 egy egyszerű programmal a felső gombra előre megy 1 másodpercig
+
+Nehézségek:
+1. Megfelelő Portot ki kell választani az Arduino IDE-ben (Tools/Port)
+2. Ha nincs bekapcsolva a táp a motor nem megy de a kábel miatt a kijelző megy
