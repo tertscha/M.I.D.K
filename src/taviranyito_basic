@@ -1,0 +1,43 @@
+#include "MatrixMiniR4.h"
+
+char cmd;
+
+void setup()
+{
+  MiniR4.begin();
+  MiniR4.PWR.setBattCell(2);
+
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  // ha jön adat
+  if (Serial.available())
+  {
+    cmd = Serial.read();
+    Serial.println(cmd); // debug
+
+    if (cmd == 'F')
+    {
+      // ELŐRE
+      //MiniR4.M1.setSpeed(100);
+      //MiniR4.M2.setSpeed(100);
+      MiniR4.OLED.clearDisplay();
+      MiniR4.OLED.setCursor(10, 0);
+      MiniR4.OLED.print("Forward");
+      MiniR4.OLED.display();      
+    }
+
+    if (cmd == 'S')
+    {
+      // STOP
+      //MiniR4.M1.setSpeed(0);
+      //MiniR4.M2.setSpeed(0);
+      MiniR4.OLED.clearDisplay();
+      MiniR4.OLED.setCursor(10, 0);
+      MiniR4.OLED.print("STOP");
+      MiniR4.OLED.display();
+    }
+  }
+}
