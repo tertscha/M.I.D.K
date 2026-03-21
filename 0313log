@@ -8,3 +8,9 @@ Mit csináltunk:
 Nehézségek:
 1. Megfelelő Portot ki kell választani az Arduino IDE-ben (Tools/Port)
 2. Ha nincs bekapcsolva a táp a motor nem megy de a kábel miatt a kijelző megy
+
+Mit tanultunk:
+1. Arduino IDE
+2. Matrix block
+3. Basic C++
+
