@@ -21,8 +21,8 @@ void loop()
     if (cmd == 'F')
     {
       // ELŐRE
-      //MiniR4.M1.setSpeed(100);
-      //MiniR4.M2.setSpeed(100);
+      MiniR4.M3.setSpeed(100);
+      MiniR4.M4.setSpeed(100);
       MiniR4.OLED.clearDisplay();
       MiniR4.OLED.setCursor(10, 0);
       MiniR4.OLED.print("Forward");
@@ -32,12 +32,45 @@ void loop()
     if (cmd == 'S')
     {
       // STOP
-      //MiniR4.M1.setSpeed(0);
-      //MiniR4.M2.setSpeed(0);
+      MiniR4.M3.setSpeed(0);
+      MiniR4.M4.setSpeed(0);
       MiniR4.OLED.clearDisplay();
       MiniR4.OLED.setCursor(10, 0);
       MiniR4.OLED.print("STOP");
       MiniR4.OLED.display();
+    }
+
+    if (cmd == 'B')
+    {
+      // HÁTRA
+      MiniR4.M3.setSpeed(-100);
+      MiniR4.M4.setSpeed(-100);
+      MiniR4.OLED.clearDisplay();
+      MiniR4.OLED.setCursor(10, 0);
+      MiniR4.OLED.print("Backwards");
+      MiniR4.OLED.display();      
+    }
+
+    if (cmd == 'L')
+    {
+      // BALRA
+      MiniR4.M3.setSpeed(-100);
+      MiniR4.M4.setSpeed(100);
+      MiniR4.OLED.clearDisplay();
+      MiniR4.OLED.setCursor(10, 0);
+      MiniR4.OLED.print("Left");
+      MiniR4.OLED.display();      
+    }
+
+    if (cmd == 'R')
+    {
+      // JOBRA
+      MiniR4.M3.setSpeed(100);
+      MiniR4.M4.setSpeed(-100);
+      MiniR4.OLED.clearDisplay();
+      MiniR4.OLED.setCursor(10, 0);
+      MiniR4.OLED.print("Right");
+      MiniR4.OLED.display();      
     }
   }
 }
