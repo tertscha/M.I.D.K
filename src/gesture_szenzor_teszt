@@ -1,0 +1,52 @@
+#include "MatrixMiniR4.h"
+
+int gesture;
+
+void setup()
+{
+  MiniR4.begin();
+  MiniR4.PWR.setBattCell(2);
+  Serial.begin(9600);
+  MiniR4.I2C2.MXGesture.begin();
+}
+
+void loop()
+{
+  gesture = MiniR4.I2C2.MXGesture.getGesture();
+  MiniR4.OLED.clearDisplay();
+  MiniR4.OLED.setCursor(10, 20);
+  MiniR4.OLED.print(gesture);
+  MiniR4.OLED.display();
+  if(gesture == 3)
+  {
+    MiniR4.OLED.setCursor(10, 10);
+    MiniR4.OLED.print("hatra");
+    MiniR4.OLED.display();
+  }
+  if(gesture == 9)
+  {
+    MiniR4.OLED.setCursor(10, 10);
+    MiniR4.OLED.print("allj");
+    MiniR4.OLED.display();
+  }
+  if(gesture == 4)
+  {
+    MiniR4.OLED.setCursor(10, 10);
+    MiniR4.OLED.print("elore");
+    MiniR4.OLED.display();
+  }
+  if(gesture == 2)
+  {
+    MiniR4.OLED.setCursor(10, 10);
+    MiniR4.OLED.print("left");
+    MiniR4.OLED.display();
+  }
+  if(gesture == 1)
+  {
+    MiniR4.OLED.setCursor(10, 10);
+    MiniR4.OLED.print("right");
+    MiniR4.OLED.display();
+  }
+  delay(500);
+
+}
