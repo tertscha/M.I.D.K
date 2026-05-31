@@ -2,6 +2,16 @@
 
 int gesture;
 
+void printit(const char* text, int row = 10, int column = 10)
+{
+  MiniR4.OLED.setCursor(column, row);
+  MiniR4.OLED.print(text);
+  MiniR4.OLED.display();
+}
+void setStatusLed(uint8_t n, uint8_t r, uint8_t g, uint8_t b) {
+  // n: can be 1 or 2 which led
+  MiniR4.LED.setColor(n, r, g, b);
+}
 void setup()
 {
   MiniR4.begin();
@@ -17,23 +27,31 @@ void loop()
   MiniR4.OLED.setCursor(10, 20);
   MiniR4.OLED.print(gesture);
   MiniR4.OLED.display();
-  if(gesture == 3)
+  printit ("Rozi vagyok XD.", 20);
+  MiniR4.LED.setColor(1, 250, 2, 2);
+  if(gesture == 3) //le
   {
-    MiniR4.OLED.setCursor(10, 10);
-    MiniR4.OLED.print("hatra");
-    MiniR4.OLED.display();
+    printit("hatra");
+    setStatusLed(1,0,255,0); //green
+    //MiniR4.OLED.setCursor(10, 10);
+    //MiniR4.OLED.print("hatra");
+    //MiniR4.OLED.display();
   }
-  if(gesture == 9)
+  if(gesture == 9) //wave
   {
-    MiniR4.OLED.setCursor(10, 10);
-    MiniR4.OLED.print("allj");
-    MiniR4.OLED.display();
+    printit("allj");
+    setStatusLed(1,250,2,2); //piros
+    //MiniR4.OLED.setCursor(10, 10);
+    //MiniR4.OLED.print("allj");
+    //MiniR4.OLED.display();
   }
   if(gesture == 4)
   {
-    MiniR4.OLED.setCursor(10, 10);
-    MiniR4.OLED.print("elore");
-    MiniR4.OLED.display();
+    printit("elore");
+    setStatusLed(1,2,209,250); //blue
+    //MiniR4.OLED.setCursor(10, 10);
+    //MiniR4.OLED.print("elore");
+    //MiniR4.OLED.display();
   }
   if(gesture == 2)
   {
