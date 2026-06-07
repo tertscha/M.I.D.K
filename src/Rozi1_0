@@ -1,0 +1,287 @@
+#include <WiFiS3.h>
+#include <MatrixMiniR4.h>
+
+char ssid[] = "EDE-WAN-C";
+char pass[] = "Linksys2011";
+
+int speed = 8;
+int turnspeed = 4;
+float Kp = 0.15;
+
+WiFiServer server(80);
+
+enum RobotMode {
+  STOP,
+  FORWARD,
+  BACKWARD,
+  LEFT,
+  RIGHT
+};
+
+RobotMode mode = STOP;
+
+double targetYaw = 0;
+unsigned long startTime = 0;
+
+const int stopDistanceMM = 100;  // 10 cm
+
+void showText(String text) {
+  MiniR4.OLED.clearDisplay();
+  MiniR4.OLED.setCursor(10, 0);
+  MiniR4.OLED.print(text);
+  MiniR4.OLED.display();
+}
+
+void stopRobot() {
+  Serial.println("STOP");
+
+  MiniR4.M3.setSpeed(0);
+  MiniR4.M4.setSpeed(0);
+
+  mode = STOP;
+  showText("STOP");
+}
+
+void startForward() {
+  Serial.println("FORWARD");
+
+  mode = FORWARD;
+  targetYaw = MiniR4.Motion.getEuler(MiniR4Motion::AxisType::Yaw);
+  startTime = millis();
+
+  showText("Forward");
+}
+
+void goBackward() {
+  Serial.println("BACKWARD");
+
+  mode = BACKWARD;
+  showText("Backwards");
+}
+
+void turnLeft() {
+  Serial.println("LEFT");
+
+  mode = LEFT;
+  showText("Left");
+}
+
+void turnRight() {
+  Serial.println("RIGHT");
+
+  mode = RIGHT;
+  showText("Right");
+}
+
+void updateMotors() {
+  if (mode == STOP) {
+    MiniR4.M3.setSpeed(0);
+    MiniR4.M4.setSpeed(0);
+    return;
+  }
+
+  if (mode == FORWARD) {
+    double yaw = MiniR4.Motion.getEuler(MiniR4Motion::AxisType::Yaw);
+    double error = targetYaw - yaw;
+    double correction = error * Kp;
+
+    correction = constrain(correction, -2.0, 2.0);
+
+    int m3Speed = speed - correction;
+    int m4Speed = speed + correction;
+
+    // M3 indulási rásegítés
+    if (millis() - startTime < 700) {
+      m3Speed += 4;
+    }
+
+    m3Speed = constrain(m3Speed, -30, 30);
+    m4Speed = constrain(m4Speed, -30, 30);
+
+    MiniR4.M3.setSpeed(m3Speed);
+    MiniR4.M4.setSpeed(m4Speed);
+  }
+
+  else if (mode == BACKWARD) {
+    MiniR4.M3.setSpeed(-speed);
+    MiniR4.M4.setSpeed(-speed);
+  }
+
+  else if (mode == LEFT) {
+    MiniR4.M3.setSpeed(turnspeed);
+    MiniR4.M4.setSpeed(-turnspeed);
+  }
+
+  else if (mode == RIGHT) {
+    MiniR4.M3.setSpeed(-turnspeed);
+    MiniR4.M4.setSpeed(turnspeed);
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(1500);
+
+  MiniR4.begin();
+
+  // Első távolságszenzor: I2C1
+  MiniR4.I2C1.MXLaserV2.begin();
+
+  // Hátsó távolságszenzor: I2C4
+  MiniR4.I2C4.MXLaserV2.begin();
+
+  showText("Calibrating");
+
+  delay(1000);
+  MiniR4.Motion.resetIMUValues();
+  delay(500);
+
+  Serial.print("Csatlakozas WiFi-re: ");
+  Serial.println(ssid);
+
+  while (WiFi.begin(ssid, pass) != WL_CONNECTED) {
+    Serial.println("Nem sikerult, ujraproba 3 mp mulva...");
+    showText("WiFi retry");
+    delay(3000);
+  }
+
+  while (WiFi.localIP() == IPAddress(0, 0, 0, 0)) {
+    Serial.println("Varakozas IP cimre...");
+    showText("Getting IP");
+    delay(500);
+  }
+
+  delay(1000);
+
+  Serial.println("WiFi csatlakozva.");
+  Serial.print("Robot IP cime: ");
+  Serial.println(WiFi.localIP());
+
+  MiniR4.OLED.clearDisplay();
+  MiniR4.OLED.setCursor(0, 0);
+  MiniR4.OLED.print("IP:");
+  MiniR4.OLED.setCursor(0, 10);
+  MiniR4.OLED.print(WiFi.localIP());
+  MiniR4.OLED.display();
+
+  server.begin();
+  Serial.println("Webszerver elindult.");
+}
+
+void sendPage(WiFiClient &client) {
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type:text/html; charset=utf-8");
+  client.println("Connection: close");
+  client.println();
+
+  client.println("<!DOCTYPE html><html><head>");
+  client.println("<meta name='viewport' content='width=device-width, initial-scale=1'>");
+  client.println("<style>");
+  client.println("body{font-family:Arial;text-align:center;margin-top:30px;}");
+  client.println("button{width:120px;height:60px;font-size:20px;margin:8px;}");
+  client.println("</style></head><body>");
+  client.println("<h2>Matrix Mini R4 robot iranyitas</h2>");
+  client.println("<p><a href='/forward'><button>Elore</button></a></p>");
+  client.println("<p>");
+  client.println("<a href='/left'><button>Balra</button></a>");
+  client.println("<a href='/stop'><button>Stop</button></a>");
+  client.println("<a href='/right'><button>Jobbra</button></a>");
+  client.println("</p>");
+  client.println("<p><a href='/backward'><button>Hatra</button></a></p>");
+  client.println("</body></html>");
+}
+
+void checkObstacles() {
+  int frontDistance = MiniR4.I2C1.MXLaserV2.getDistance();
+  int backDistance  = MiniR4.I2C4.MXLaserV2.getDistance();
+
+  bool frontObstacle = frontDistance > 0 && frontDistance < stopDistanceMM;
+  bool backObstacle  = backDistance > 0 && backDistance < stopDistanceMM;
+
+  if (mode == FORWARD && frontObstacle) {
+    stopRobot();
+
+    MiniR4.OLED.clearDisplay();
+    MiniR4.OLED.setCursor(0, 0);
+    MiniR4.OLED.print("FRONT STOP");
+    MiniR4.OLED.setCursor(0, 10);
+    MiniR4.OLED.print(frontDistance);
+    MiniR4.OLED.print(" mm");
+    MiniR4.OLED.display();
+  }
+
+  else if (mode == BACKWARD && backObstacle) {
+    stopRobot();
+
+    MiniR4.OLED.clearDisplay();
+    MiniR4.OLED.setCursor(0, 0);
+    MiniR4.OLED.print("BACK STOP");
+    MiniR4.OLED.setCursor(0, 10);
+    MiniR4.OLED.print(backDistance);
+    MiniR4.OLED.print(" mm");
+    MiniR4.OLED.display();
+  }
+
+  else if ((mode == LEFT || mode == RIGHT) && (frontObstacle || backObstacle)) {
+    stopRobot();
+
+    MiniR4.OLED.clearDisplay();
+    MiniR4.OLED.setCursor(0, 0);
+    MiniR4.OLED.print("TURN STOP");
+    MiniR4.OLED.setCursor(0, 10);
+
+    if (frontObstacle) {
+      MiniR4.OLED.print("F:");
+      MiniR4.OLED.print(frontDistance);
+    } else {
+      MiniR4.OLED.print("B:");
+      MiniR4.OLED.print(backDistance);
+    }
+
+    MiniR4.OLED.print(" mm");
+    MiniR4.OLED.display();
+  }
+}
+
+void loop() {
+  checkObstacles();
+
+  WiFiClient client = server.available();
+
+  if (client) {
+    String request = "";
+    unsigned long timeout = millis();
+
+    while (client.connected() && millis() - timeout < 1000) {
+      if (client.available()) {
+        char c = client.read();
+        request += c;
+        if (c == '\n') break;
+      }
+    }
+
+    Serial.println("Keres:");
+    Serial.println(request);
+
+    if (request.indexOf("GET /forward") >= 0) {
+      startForward();
+    } else if (request.indexOf("GET /backward") >= 0) {
+      goBackward();
+    } else if (request.indexOf("GET /left") >= 0) {
+      turnLeft();
+    } else if (request.indexOf("GET /right") >= 0) {
+      turnRight();
+    } else if (request.indexOf("GET /stop") >= 0) {
+      stopRobot();
+    }
+
+    delay(50);
+    sendPage(client);
+    delay(10);
+    client.stop();
+  }
+
+  updateMotors();
+
+  delay(30);
+}
