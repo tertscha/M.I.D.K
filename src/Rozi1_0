@@ -1,8 +1,12 @@
 #include <WiFiS3.h>
 #include <MatrixMiniR4.h>
 
-char ssid[] = "EDE-WAN-C";
-char pass[] = "Linksys2011";
+const char* ssid = "rozinet";
+const char* pass = "Linksys2011";
+IPAddress local_ip(192, 168, 1, 80);  // Replace with your desired IP
+IPAddress gateway(192, 168, 1, 1);     // Replace with your router's IP
+IPAddress subnet(255, 255, 255, 0);    
+IPAddress primaryDNS(8, 8, 8, 8);      // e.g., Google DNS
 
 int speed = 8;
 int turnspeed = 4;
@@ -119,6 +123,8 @@ void updateMotors() {
 }
 
 void setup() {
+  
+  WiFi.begin(ssid, pass);
   Serial.begin(115200);
   delay(1500);
 
@@ -139,6 +145,9 @@ void setup() {
   Serial.print("Csatlakozas WiFi-re: ");
   Serial.println(ssid);
 
+  //WiFi.mode(WIFI_STA); // nem tudom kell-e
+  WiFi.config(local_ip, gateway, subnet, primaryDNS);
+  
   while (WiFi.begin(ssid, pass) != WL_CONNECTED) {
     Serial.println("Nem sikerult, ujraproba 3 mp mulva...");
     showText("WiFi retry");
